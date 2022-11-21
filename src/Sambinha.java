@@ -33,6 +33,7 @@ public class Sambinha{
 		boolean end = false, opcioValida = false, nom = false;
 		extreureDades(dades);
 		
+		
 		while(!end) {
 			// El programa primer mostra el menu amb les diferents funcions i es pregunta que es vol fer.
 			// Comprova que l'opcio es valida
