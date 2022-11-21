@@ -1309,7 +1309,6 @@ public class Sambinha{
 				System.out.println("Opció incorrecta torna a provar");
 			}
 		}		
-		
 		int i=Integer.parseInt(opcio);
 		switch(i) {
 		case 1: 
