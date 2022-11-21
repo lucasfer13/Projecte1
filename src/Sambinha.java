@@ -1123,7 +1123,7 @@ public class Sambinha{
 									System.out.println("Longitud password inferior a la minima a linia -> "+linies[0]);
 									correcte = false;
 								}
-								if (longitud < simbols+lletres+numeros && lletres < majuscules+minuscules) {
+								if (longitud < simbols+lletres+numeros || lletres < majuscules+minuscules) {
 									System.out.println(errors[4]+linies[0]);
 									correcte = false;
 								}
