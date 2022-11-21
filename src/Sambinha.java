@@ -1,3 +1,4 @@
+package PrimeresProbes;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,7 +10,12 @@ import java.math.BigInteger;
 import java.util.Random;
 import java.util.Scanner;
 
-public class Sambinha {
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+
+public class Sambinha{
 
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
@@ -19,7 +25,10 @@ public class Sambinha {
 		int linies[] = {0};
 		String[][] camps = null, dadesAleatories = null, dades = new String [10][200];
 		String tmp, formatSortida = null, nomDomini = null, extensioDomini = null, opcioS = null;
-		String[] linia;
+		String[] linia=null;
+		String [] nomsEtiquetes = new String[2];
+		String nomSortida="";
+		int numSortida =0;
 		BufferedReader br;
 		FileReader fr;
 		File entrada, sortida = null;
@@ -66,7 +75,19 @@ public class Sambinha {
 						numLinies = linies[0]-1;
 						tmp = br.readLine();
 						linia = tmp.split(" ");
+						numSortida = linia.length;
 						sortida = new File(linia[0]);
+						if(linia[2].equals("XML") && linia.length == 4) {
+							nomsEtiquetes[0] = "registres";
+							nomsEtiquetes[1] = "registre";
+						}
+						else if(linia.length==4) {
+							nomSortida = linia[3];
+						}
+						else if(linia.length==5) {
+							nomSortida = linia[4];
+							nomsEtiquetes = linia[3].split("/");
+						} 
 						numRegistres = Integer.parseInt(linia[1]);
 						formatSortida = linia[2];
 						camps = new String[numLinies][9];
@@ -192,77 +213,116 @@ public class Sambinha {
 									generarMAC(dadesAleatories[i], aleatori);
 									break;
 								case 21:
-									generarColorsHexadecimals(dadesAleatories[i]);
+									generarColorsHexadecimals(dadesAleatories[i], aleatori);
+									break;
+								case 22:
+									colorsRGB(dadesAleatories[i]);
 									break;
 							}
 						}
 					}
 					for (i=0;i<camps.length;i++) {
-						for (i2=2;i<camps[i].length;i++) {
+						for (i2=2;i2<camps[i].length;i2++) {
 							if (camps[i][i2] != null && camps[i][i2].charAt(0) == 'B') {
 								int percentatje = Integer.parseInt(camps[i][i2].substring(1));
 								generarNull(dadesAleatories[i], percentatje, aleatori);
 							}
 						}
 					}
+					
+					mostraPre(dadesAleatories, camps);
+					
 					// Mira quin format de sortida s'habia especificat i segons quin sigui crida la funcio corresponen per generar l'arxiu de sortida
-					if (formatSortida.equals("XML")) {
-						sortida = new File(sortida.getAbsolutePath()+"\\dades.xml");
-						try {
+					if(despresDePre(dadesAleatories,camps)==1)
+					{
+						if (formatSortida.equals("XML")) {
+							if(numSortida == 4 || numSortida == 5) {
+								sortida = new File(sortida.getAbsolutePath()+"\\"+nomSortida+".xml");
+							}else {
+								sortida = new File(sortida.getAbsolutePath()+"\\dades.xml");								
+							}
+							try {
+								if (!sortida.exists()) {
+									sortida.createNewFile();
+								}
+								sortidaXML(dadesAleatories, camps, sortida, nomsEtiquetes);
+							} catch (FileNotFoundException e) {
+								e.printStackTrace();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							generarXSLT(camps, sortida, nomsEtiquetes);
+							generarXSD(camps, sortida, nomsEtiquetes);
+							System.out.println("Generat arxiu XML.");
+						} else if (formatSortida.equals("SQL")) {
+							if(numSortida == 4) {
+							sortida = new File(sortida.getAbsolutePath()+"\\"+nomSortida+".sql");
+							}else {
+								sortida = new File(sortida.getAbsolutePath()+"\\dades.sql");								
+							}
 							if (!sortida.exists()) {
-								sortida.createNewFile();
+								try {
+									sortida.createNewFile();
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
 							}
-							sortidaXML(dadesAleatories, camps, sortida);
-						} catch (FileNotFoundException e) {
-							e.printStackTrace();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-						generarXSLT(camps, sortida);
-						generarXSD(camps, sortida);
-						System.out.println("Generat arxiu XML.");
-					} else if (formatSortida.equals("SQL")) {
-						sortida = new File(sortida.getAbsolutePath()+"\\dades.sql");
-						if (!sortida.exists()) {
-							try {
-								sortida.createNewFile();
-							} catch (IOException e) {
-								e.printStackTrace();
+							generarSQL(camps, dadesAleatories, sortida);
+							System.out.println("Generat arxiu SQL.");
+						} else if (formatSortida.equals("CSV")) {
+							if(numSortida == 4) {
+								sortida = new File(sortida.getAbsolutePath()+"\\"+nomSortida+".csv");
+							}else {
+								sortida = new File(sortida.getAbsolutePath()+"\\dades.csv");
 							}
-						}
-						generarSQL(camps, dadesAleatories, sortida);
-						System.out.println("Generat arxiu SQL.");
-					} else if (formatSortida.equals("CSV")) {
-						sortida = new File(sortida.getAbsolutePath()+"\\dades.csv");
-						if (!sortida.exists()) {
-							try {
-								sortida.createNewFile();
-							} catch (IOException e) {
-								e.printStackTrace();
+							if (!sortida.exists()) {
+								try {
+									sortida.createNewFile();
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
 							}
-						}
-						generarCSV(dadesAleatories, camps, sortida);
-					} else if (formatSortida.equals("JSON")) {
-						sortida = new File(sortida.getAbsolutePath()+"\\dades.json");
-						if (!sortida.exists()) {
-							try {
-								sortida.createNewFile();
-							} catch (IOException e) {
-								e.printStackTrace();
+							generarCSV(dadesAleatories, camps, sortida);
+						} else if (formatSortida.equals("JSON")) {
+							if(numSortida == 4) {
+								sortida = new File(sortida.getAbsolutePath()+"\\"+nomSortida+".json");
+							}else {
+								sortida = new File(sortida.getAbsolutePath()+"\\dades.json");								
 							}
+							if (!sortida.exists()) {
+								try {
+									sortida.createNewFile();
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
+							}
+							generarJSON(dadesAleatories, camps, sortida);
 						}
-						generarJSON(dadesAleatories, camps, sortida);
+						System.out.println();
 					}
-					System.out.println();
 				}
 			} else if (opcio == 0) {
 				end = true;
+			} else if (opcio == 2) {
+				mostrarDades(in);
+			} else if (opcio == 3) {
+				entrada = new File("");
+				while (!entrada.exists()) {
+					System.out.print("Introdueix la ruta de l'arxiu inicial: ");
+					entrada = new File(in.nextLine());
+					if (!entrada.exists()) {
+						System.out.println("No existeix l'arxiu d'entrada");
+					}
+				}
+				if (validarEntrada(entrada, linies)) {
+					System.out.println("Arxiu correcte!");
+				}
 			}
 		}
 	}
 	
 	// Funcio per generarXSD
-	public static void generarXSD(String[][] camps, File sortida ) {
+	public static void generarXSD(String[][] camps, File sortida, String[] etiquetes) {
 		File sortidaXsd = new File (sortida.getParent()+"\\xsd.xsd");
 		try {
 			if (!sortidaXsd.exists()) {
@@ -272,23 +332,23 @@ public class Sambinha {
 			PrintStream out = new PrintStream(sortidaXsd);
 			out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 			out.println("<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\">");
-			out.println("\t<xs:element name=\"camp\">");
+			out.println("\t<xs:element name=\""+etiquetes[0]+"\">");
 			out.println("\t\t<xs:complexType>");
 			out.println("\t\t\t<xs:sequence>");
-			out.println("\t\t\t\t<xs:element ref=\"dades\" maxOccurs=\"unbounded\"/>");
+			out.println("\t\t\t\t<xs:element ref=\""+etiquetes[1]+"\" maxOccurs=\"unbounded\"/>");
 			out.println("\t\t\t</xs:sequence>");
 			out.println("\t\t</xs:complexType>");
 			out.println("\t</xs:element>");
-			out.println("\t<xs:element name=\"dades\">");
+			out.println("\t<xs:element name=\""+etiquetes[1]+"\">");
 			out.println("\t\t<xs:complexType>");
 			out.println("\t\t\t<xs:sequence>");
 			// Per cada tipus de dada el programa fica diferents restriccions.
 			for(int i=0;i<camps.length;i++) {
 				if(camps[i][1].equals("11")) { //BOOLEAN
-					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\" type=\"xs:boolean\"/>");
+					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\" type=\"xs:boolean\" nillable=\"true\"/>");
 				}
 				else if(camps[i][1].equals("12")) { //NUMBER
-					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\">");
+					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\" nillable=\"true\">");
 					out.println("\t\t\t\t\t<xs:simpleType>");
 					out.println("\t\t\t\t\t\t<xs:restriction base=\"xs:decimal\">");
 					out.println("\t\t\t\t\t\t\t<xs:minInclusive value=\"0\"/>");
@@ -297,7 +357,7 @@ public class Sambinha {
 					out.println("\t\t\t\t</xs:element>");
 				}
 				else if(camps[i][1].equals("15")) { //PASSWORD
-					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\">");
+					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\" nillable=\"true\">");
 					out.println("\t\t\t\t\t<xs:simpleType>");
 					out.println("\t\t\t\t\t\t<xs:restriction base=\"xs:string\">");
 					out.println("\t\t\t\t\t\t\t<xs:length value=\""+camps[i][7]+"\"/>");
@@ -305,11 +365,8 @@ public class Sambinha {
 					out.println("\t\t\t\t\t</xs:simpleType>");
 					out.println("\t\t\t\t</xs:element>");
 				}
-				else if(camps[i][1].equals("16")) { //DATES
-					out.println("\t\t\t\t<xs:element name= \""+camps[i][0]+"\" type=\"xs:string\"/>");
-				}
 				else if(camps[i][1].equals("17")) { //IBAN
-					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\">");
+					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\" nillable=\"true\">");
 					out.println("\t\t\t\t\t<xs:simpleType>");
 					out.println("\t\t\t\t\t\t<xs:restriction base=\"xs:string\">");
 					out.println("\t\t\t\t\t\t\t<xs:pattern value=\"[E][S][0-9]{22}\"/>");
@@ -318,7 +375,7 @@ public class Sambinha {
 					out.println("\t\t\t\t</xs:element>");
 				}
 				else if(camps[i][1].equals("18")) { //DNI
-					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\">");
+					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\" nillable=\"true\">");
 					out.println("\t\t\t\t\t<xs:simpleType>");
 					out.println("\t\t\t\t\t\t<xs:restriction base=\"xs:string\">");
 					out.println("\t\t\t\t\t\t\t<xs:pattern value=\"[0-9]{8}[A-Z]{1}\"/>");
@@ -327,10 +384,10 @@ public class Sambinha {
 					out.println("\t\t\t\t</xs:element>");
 				}
 				else if(camps[i][1].equals("19")) { //AUTONUMÈRIC
-					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\" type=\"xs:positiveInteger\" default=\"1\"/>");
+					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\" type=\"xs:positiveInteger\" default=\"1\" nillable=\"true\"/>");
 				} 
 				else if(camps[i][1].equals("20")) { // MAC
-					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\">");
+					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\" nillable=\"true\">");
 					out.println("\t\t\t\t\t<xs:simpleType>");
 					out.println("\t\t\t\t\t\t<xs:restriction base=\"xs:string\">");
 					out.println("\t\t\t\t\t\t\t<xs:pattern value=\"[0-9ABCDEF]{2}-[0-9ABCDEF]{2}-[0-9ABCDEF]{2}-[0-9ABCDEF]{2}\"/>");
@@ -339,7 +396,7 @@ public class Sambinha {
 					out.println("\t\t\t\t</xs:element>");
 				}
 				else { //LA RESTA DE CAMPS
-					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\" type=\"xs:string\"/>");
+					out.println("\t\t\t\t<xs:element name=\""+camps[i][0]+"\" type=\"xs:string\" nillable=\"true\"/>");
 				}
 			}
 			out.println("\t\t\t</xs:sequence>");
@@ -370,7 +427,7 @@ public class Sambinha {
 	}
 
 	// Funció per generar arxiu XSLT
-	public static void generarXSLT(String[][] camps, File sortida) {
+	public static void generarXSLT(String[][] camps, File sortida, String[] etiquetes) {
 		int i;
 		File sortidaXslt = new File(sortida.getParent()+"\\xslt.xsl");
 		try {
@@ -398,7 +455,7 @@ public class Sambinha {
 				out.println("					<th>"+camps[i][0]+"</th>");
 			}
 			out.println("				</tr>");
-			out.println("				<xsl:for-each select=\"camp/dades\">");
+			out.println("				<xsl:for-each select=\""+etiquetes[0]+"/"+etiquetes[1]+"\">");
 			out.println("					<tr>");
 			for (i=0;i<camps.length;i++) {
 				out.println("						<td><xsl:value-of select=\""+camps[i][0]+"\"/></td>");
@@ -417,29 +474,29 @@ public class Sambinha {
 		}
 	}
 	
-	public static void sortidaXML (String dadesAleatories[][],String camps[][], File sortida) {
+	public static void sortidaXML (String dadesAleatories[][],String camps[][], File sortida, String[] etiquetes) {
 		PrintStream escriuXML;
 		try {
 			escriuXML = new PrintStream (sortida);
 			int a;
 			escriuXML.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 			escriuXML.println("<?xml-stylesheet type=\"text/xls\" href=\"xslt.xsl\"?>");
-			escriuXML.println("	<camp xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"xsd.xsd\">");
+			escriuXML.println("	<"+etiquetes[0]+" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"xsd.xsd\">");
 			for(int i=0;i<dadesAleatories[0].length;i++) {
 	
-				escriuXML.println("		<dades>");
+				escriuXML.println("		<"+etiquetes[1]+">");
 				for(a=0;a<camps.length;a++) {
 					// Per generar el XML es fan varies etiquetes "dades" on dintre hi son les dades amb les etiquetes amb el nom del camp
 					if (dadesAleatories[a][i] == null) {
-						escriuXML.println("			</"+camps[a][0]+">");
+						escriuXML.println("			<"+camps[a][0]+"></"+camps[a][0]+">");
 					} else {
 						escriuXML.println("			<"+camps[a][0]+">"+dadesAleatories[a][i]+"</"+camps[a][0]+">");
 					}
 				}
-				escriuXML.println("		</dades>");
+				escriuXML.println("		</"+etiquetes[1]+">");
 				
 			}
-			escriuXML.println("	</camp>");
+			escriuXML.println("	</"+etiquetes[0]+">");
 			escriuXML.flush();
 			escriuXML.close();
 		} catch (FileNotFoundException e) {
@@ -699,14 +756,13 @@ public class Sambinha {
 	}
 	
 	// Funcio per generar colors hexadecimals
-	public static void generarColorsHexadecimals(String dades[]) {
-		Random random = new Random();
+	public static void generarColorsHexadecimals(String dades[], Random aleatori) {
 		char [] opcions = {'A','B','C','D','E','F','1','2','3','4','5','6','7','8','9','0'}; //posibles combinacions que hi ha dintre de un color hexadecimal
 		
 		for(int i=0; i<dades.length;i++) {
 			String color = "#";
 			for(int j=0;j<6;j++) { 
-				color += opcions[random.nextInt(opcions.length)]; 
+				color += opcions[aleatori.nextInt(opcions.length)]; 
 			}
 			dades[i] = color;
 		}
@@ -901,8 +957,9 @@ public class Sambinha {
 	public static boolean validarEntrada(File entrada, int[] linies) {
 		File sortida;
 		String nomCampstmp = "";
-		String[] camps, nomCamps, errors = {"Arxiu de sortida no vàlid", "Número de registres no vàlid", "Format de sortida no vàlid", "Nombre de camps no vàlid en línia -> ", "Paràmetre no vàlid en línia ->", "ID no vàlid en línia -> ", "Caràcter no vàlid en el nom dels camps."};
+		String[] camps = null, nomCamps, errors = {"Arxiu de sortida no vàlid", "Número de registres no vàlid", "Format de sortida no vàlid", "Nombre de camps no vàlid en línia -> ", "Paràmetre no vàlid en línia -> ", "ID no vàlid en línia -> ", "Caràcter no vàlid en el nom dels camps."};
 		int i, i2, id, longitud, minuscules, majuscules, lletres, simbols, numeros, maxim, minim, decimals = 0;
+		boolean correcte = true;
 		
 		try {
 			// Primer verifica els parametres de la primera linia, l'arxiu de sortida, si es numero el numero de registres i el format de sortida
@@ -916,33 +973,47 @@ public class Sambinha {
 			} else {
 				camps = comprovacio.split(" ");
 			}
-			if (camps.length == 3) {
+			if (camps.length == 3 || camps.length == 4 || camps.length == 5) {
 				sortida = new File(camps[0]);
 				if (!sortida.isDirectory()) {
 					System.out.println(errors[0]);
-					return false;
+					correcte = false;
 				}
+				if(camps.length == 5 && camps[2].equals("XML")) {
+					String [] ultimcampXML = camps[3].split("/");
+					if(ultimcampXML.length!=2) {
+						System.out.println(errors[4]+linies[0]);
+						correcte = false;
+					}	
+				}
+		/*		if(camps.length == 4) {
+					String [] ultimcampXML = camps[3].split("/");
+					if(ultimcampXML.length!=2 || !camps[2].equals("XML")) {
+						System.out.println(errors[4]+linies[0]);
+						correcte = false;
+					}	
+				} */
 				for (i=0;i<camps[1].length();i++) {
 					if (!Character.isDigit(camps[1].charAt(i))) {
 						System.out.println(errors[1]);
-						return false;
+						correcte = false;
 					}
 				}
 				if (camps[1].length() > 6) {
 					System.out.println("Número de registres superior a 6 digits.");
-					return false;
+					correcte = false;
 				}
 				if (!camps[2].equals("XML") && !camps[2].equals("SQL") && !camps[2].equals("JSON") && !camps[2].equals("CSV")) {
 					System.out.println(errors[2]);
-					return false;
+					correcte = false;
 				}
 			} else {
 				System.out.println(errors[3]+linies[0]);
-				return false;
+				correcte = false;
 			}
 			if (!br.ready()) {
 				System.out.println("No hi ha camps que processar.");
-				return false;
+				correcte = false;
 			} 
 			while(br.ready()) {
 				// Despres verifica cada linia i mira si te correcte el numero de camps
@@ -951,28 +1022,28 @@ public class Sambinha {
 				if (camps.length >= 2) {
 					for (i=0;i<camps[1].length();i++) {
 						if (!Character.isDigit(camps[1].charAt(i))) {
-							return false;
+							correcte = false;
 						}
 					}
 					if (camps[0].length() > 30) {
 						System.out.println("Nom camp superior a 30 en linia -> "+linies[0]);
-						return false;
+						correcte = false;
 					}
 					id = Integer.parseInt(camps[1]);
 					// Finalment verifica les id i per cada id mira si hi ha parametres, si hauria d'haber o no i si son correctes.
 					if (id < 1 || id > 21) {
 						System.out.println(errors[5]+linies[0]);
-						return false;
+						correcte = false;
 					}
-					if ((id >= 1 && id <= 11) || id == 14 || id == 17 || id == 18 || id == 20 || id == 21) {
+					if ((id >= 1 && id <= 11) || id == 14 || id == 17 || id == 18 || (id >= 20 && id <= 22)) {
 						if (camps.length > 3) {
 							System.out.println(errors[3]+linies[0]);
-							return false;
+							correcte = false;
 						}
 						if (camps.length == 3) {
 							if (camps[2].charAt(0) != 'B') {
 								System.out.println(errors[4]+linies[0]);
-								return false;
+								correcte = false;
 							}
 						}
 					} else {
@@ -980,18 +1051,18 @@ public class Sambinha {
 						case 12:
 							if (camps.length > 6) {
 								System.out.println(errors[3]+linies[0]);
-								return false;
+								correcte = false;
 							} else {
 								maxim = 1000;
 								minim = 0;
 								for (i=2;i<camps.length;i++) {
 									if ((camps[i].charAt(0) != 'X' && camps[i].charAt(0) != 'D' && camps[i].charAt(0) != 'M' && camps[i].charAt(0) != 'B') || camps[i].length() > 7) {
 										System.out.println(errors[4]+linies[0]);
-										return false;
+										correcte = false;
 									} else {
 										for (i2=1;i2<camps[i].length();i2++) {
 											if (!Character.isDigit(camps[i].charAt(i2))) {
-												return false;
+												correcte = false;
 											}
 										}
 									}
@@ -1005,23 +1076,23 @@ public class Sambinha {
 								}
 								if (maxim < minim) {
 									System.out.println(errors[4]+linies[0]);
-									return false;
+									correcte = false;
 								}
 								if (decimals > 5) {
 									System.out.println("Numero de decimals no valid en linia -> "+linies[0]);
-									return false;
+									correcte = false;
 								}
 							}
 							break;
 						case 13:
 							if (camps.length > 5) {
 								System.out.println(errors[3]+linies[0]);
-								return false;
+								correcte = false;
 							} else {
 								for (i=2;i<camps.length;i++) {
 									if (camps[i].charAt(0) != 'X' && camps[i].charAt(0) != 'D' && camps[i].charAt(0) != 'B') {
 										System.out.println(errors[4]+linies[0]);
-										return false;
+										correcte = false;
 									}
 								}
 							}
@@ -1029,19 +1100,19 @@ public class Sambinha {
 						case 15:
 							if (camps.length > 9) {
 								System.out.println(errors[3]+linies[0]);
-								return false;
+								correcte = false;
 							} else {
 								for (i=2;i<camps.length;i++) {
 									for (i2=0;i2<camps[i].length();i2++) {
 										if (!Character.isDigit(camps[i].charAt(i2))) {
 											System.out.println(errors[4]+linies[0]);
-											return false;
+											correcte = false;
 										}
 									}
 								}
 								if (Integer.parseInt(camps[7]) > 50) {
 									System.out.println("Llarg password incorrecte a linia -> "+linies[0]);
-									return false;
+									correcte = false;
 								}
 								lletres = Integer.parseInt(camps[2]);
 								numeros = Integer.parseInt(camps[3]);
@@ -1051,11 +1122,11 @@ public class Sambinha {
 								longitud = Integer.parseInt(camps[7]);
 								if (longitud < 3) {
 									System.out.println("Longitud password inferior a la minima a linia -> "+linies[0]);
-									return false;
+									correcte = false;
 								}
 								if (longitud < simbols+lletres+numeros && lletres < majuscules+minuscules) {
 									System.out.println(errors[4]+linies[0]);
-									return false;
+									correcte = false;
 								}
 							}
 							break;
@@ -1064,17 +1135,17 @@ public class Sambinha {
 							minim = 1900;
 							if (camps.length > 4) {
 								System.out.println(errors[3]+linies[0]);
-								return false;
+								correcte = false;
 							} else {
 								for (i=2;i<camps.length;i++) {
 									if ((camps[i].charAt(0) != 'X' && camps[i].charAt(0) != 'M' && camps[i].charAt(0) != 'B') || camps[i].length() > 5) {
 										System.out.println(errors[4]+linies[0]);
-										return false;
+										correcte = false;
 									} else {
 										for (i2=1;i2<camps[i].length();i2++) {
 											if (!Character.isDigit(camps[i].charAt(i2))) {
 												System.out.println(errors[4]+linies[0]);
-												return false;
+												correcte = false;
 											}
 										}
 									}
@@ -1082,7 +1153,7 @@ public class Sambinha {
 										maxim = Integer.parseInt(camps[i].substring(1));
 										if (maxim > 3000) {
 											System.out.println("Any maxim major a 3000 a linia -> "+linies[0]);
-											return false;
+											correcte = false;
 										}
 									} else if (camps[i].charAt(0) == 'M') {
 										minim = Integer.parseInt(camps[i].substring(1));
@@ -1092,23 +1163,23 @@ public class Sambinha {
 							}
 							if (maxim < minim) {
 								System.out.println(errors[4]+linies[0]);
-								return false;
+								correcte = false;
 							}
 							break;
 						case 19:
 							if (camps.length > 4) {
 								System.out.println(errors[3]+linies[0]);
-								return false;
+								correcte = false;
 							} else {
 								if (camps.length == 3) {
 									if (camps[2].length() > 6) {
 										System.out.println(errors[4]+linies[0]);
-										return false;
+										correcte = false;
 									} else {
 										for (i=0;i<camps[2].length();i++) {
 											if (!Character.isDigit(camps[2].charAt(i))) {
 												System.out.println(errors[4]+linies[0]);
-												return false;
+												correcte = false;
 											}
 										}
 									}
@@ -1119,7 +1190,7 @@ public class Sambinha {
 					}
 				} else {
 					System.out.println(errors[3]+linies[0]);
-					return false;
+					correcte = false;
 				}
 				nomCampstmp += " "+camps[0];
 			}
@@ -1135,7 +1206,7 @@ public class Sambinha {
 				for (i2 = i+1;i2 < nomCamps.length;i2++) {
 					if (nomCamps[i].equals(nomCamps[i2])) {
 						System.out.println("Hi ha dos camps amb noms iguals, han de ser únics.");
-						return false;
+						correcte = false;
 					}
 				}
 			}
@@ -1143,21 +1214,145 @@ public class Sambinha {
 				for (i2 = 0;i2<nomCamps[i].length();i2++) {
 					if (!Character.isAlphabetic(nomCamps[i].charAt(i2)) && nomCamps[i].charAt(i2) != '_' && !Character.isDigit(nomCamps[i].charAt(i2))) {
 						System.out.println(errors[6]);
-						return false;
+						correcte = false;
 					}
 				}
 			}
 		} else {
 			System.out.println(errors[6]);
-			return false;
+			correcte = false;
 		}
-		return true;
+		return correcte;
 	}
+	
+	//funció per a mostrar una taula amb totes les dades aleatories a ver com es veuria
+	public static void mostraPre(String dadesAleatories[][],String camps[][]) {
+		DefaultTableModel model = new DefaultTableModel();
+		for(int i=0;i<camps.length;i++) {
+			model.addColumn(camps[i][0]);
+		}
+		String dades[]=new String[dadesAleatories.length] ;
+		for(int a=0;a<dadesAleatories[0].length;a++) {
+			for(int i=0;i<camps.length;i++) {
+					dades[i]=dadesAleatories[i][a];
+			}
+			model.addRow(ficarFiles(dades));
+		}
+		JTable taula = new JTable(model);
+		taula.setBounds(30,40,200,300);
+		JScrollPane sp=new JScrollPane(taula);
+		JFrame f = new JFrame();
+		f.add(sp);
+		f.setSize(3000,4000);
+		f.setVisible(true);
+	}
+	
+	//funció per a crear les files per a la taula 
+	public static Object[] ficarFiles(String dades[]) {
+		Object n[]=new Object[dades.length];
+			for(int a = 0; a < dades.length; a++) {
+				n[a]=dades[a];
+			}
+		return n;
+	}
+	
+	// menú per a la previsualització
+	public static int despresDePre(String dadesAleatories[][],String camps[][]) {
+		String opcioS="";int opcio=-1;
+		boolean opcioValida=false;
+		Scanner teclat=new Scanner(System.in);
+		System.out.println("Que vols fer ara?");
+		System.out.println("0. Sortir");
+		System.out.println("1. Generar amb aquestes dades");
+		System.out.println("2. Canviar la ruta del fitxer d'entrada.");
+		opcioS=teclat.next();
+		if (opcioS.length() == 1 && Character.isDigit(opcioS.charAt(0))) {//validem la pocio triada
+			opcio = Integer.parseInt(opcioS);
+			if (opcio >= 1 || opcio <= 2 || opcio <= 3) {
+				opcioValida = true;
+			}
+			if(opcio>2||opcio<0) {
+				System.out.println("Opció no valida");
+				despresDePre(dadesAleatories, camps);
+			}
+		}
+		if(!opcioValida) {//si no es valida utilitzem recursivitat
+			System.out.println("Opció no valida");
+			despresDePre(dadesAleatories, camps);
+		}else {
+			return opcio;
+		}
+		return opcio;
+	}
+	
+	public static void colorsRGB(String dades[]) { 
+		for(int i=0; i<dades.length;i++) {
+			String rgb="rgb=";
+			int r=(int)(Math.random()*256+0);
+			int g=(int)(Math.random()*256+0);
+			int b=(int)(Math.random()*256+0);
+			
+			rgb = rgb + "("+r+","+g+","+b+")";
+			dades[i]=rgb;
+		}
+		
+	}
+	
+	public static void mostrarDades(Scanner teclat) {
+		System.out.println("Voleu mostrar els tipus de dades(1) els tipus de sortides(2) o un exemple del fitxer d'entrada(3)");
+		int i = Integer.parseInt(teclat.nextLine());
+		switch(i) {
+		case 1: 
+			System.out.println("Tipus de dades:");
+			System.out.println("1- Nom");
+			System.out.println("2- Cognom");
+			System.out.println("3- Ciutats");
+			System.out.println("4- Adreces");
+			System.out.println("5- Professions");
+			System.out.println("6- País");
+			System.out.println("7- Estudis");
+			System.out.println("8- Colors");
+			System.out.println("9- URL");
+			System.out.println("10- Nom de la companyia");
+			System.out.println("11- Boolean");
+			System.out.println("12- Number");
+			System.out.println("13- Emails ---> Nom domini, Extensió del domini");
+			System.out.println("14- IP4");
+			System.out.println("15- Password ---> Lletres,Números,Majúscules,Minúscules,Símbols i Longitud");
+			System.out.println("16- Dates ---> Any mínim,Any màxim");
+			System.out.println("17- IBAN");
+			System.out.println("18- DNI");
+			System.out.println("19- Autonumèric ---> Valor d'inici");
+			System.out.println("20- MAC");
+			System.out.println("21- Colors hexadecimals");
+			break;
+		case 2: 
+			System.out.println("Tipus de sortides: ");
+			System.out.println("SQL");
+			System.out.println("XML");
+			System.out.println("CSV");
+			System.out.println("JSON");
+			break;
+		case 3: 
+			System.out.println("Exemple del fitxer d'entrada:");
+			System.out.println("C:\\Eclipse\\Projecte1(ruta) 200(número de registres) XML(sortida)");
+			System.out.println("nom 1");
+			System.out.println("cognom 2");
+			System.out.println("emails 13 Dnom_domini Xextensió");
+			System.out.println("password 15 3 2 1 2 3 10");
+			System.out.println("dates M1900 X2023");
+			System.out.println("autonumèric 19 10");
+			break;
+		}
+	}
+	
 	// Funcio per mostrar el menu d'opcions
 	public static void menu() {
 		System.out.println("Què vols fer?");
 		System.out.println("0. Sortir.");
 		System.out.println("1. Introduir arxiu d'entrada per generar dades aleatòries.");
+		System.out.println("2. Informacío programa.");
+		System.out.println("3. Verificar arxiu entrada.");
 		System.out.print("Introdueix l'opció pel número: ");
 	}
 }
