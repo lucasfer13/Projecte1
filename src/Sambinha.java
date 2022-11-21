@@ -1030,7 +1030,7 @@ public class Sambinha{
 					}
 					id = Integer.parseInt(camps[1]);
 					// Finalment verifica les id i per cada id mira si hi ha parametres, si hauria d'haber o no i si son correctes.
-					if (id < 1 || id > 21) {
+					if (id < 1 || id > 22) {
 						System.out.println(errors[5]+linies[0]);
 						correcte = false;
 					}
