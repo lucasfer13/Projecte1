@@ -1298,7 +1298,20 @@ public class Sambinha{
 	
 	public static void mostrarDades(Scanner teclat) {
 		System.out.println("Voleu mostrar els tipus de dades(1) els tipus de sortides(2) o un exemple del fitxer d'entrada(3)");
-		int i = Integer.parseInt(teclat.nextLine());
+		boolean numero=false;
+		String opcio="";
+		while(numero==false) {
+			System.out.println("Voleu mostrar els tipus de dades(1) els tipus de sortides(2) o un exemple del fitxer d'entrada(3)");
+			opcio=teclat.nextLine();
+			if(opcio.equals("1")||opcio.equals("2")) {
+				numero=true;
+			}else {
+				System.out.println("Opció incorrecta torna a provar");
+			}
+		}
+			
+		
+		int i=Integer.parseInt(opcio);
 		switch(i) {
 		case 1: 
 			System.out.println("Tipus de dades:");
