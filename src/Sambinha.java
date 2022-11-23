@@ -916,9 +916,9 @@ public class Sambinha{
 				for(int a=0;a<camps.length;a++) {
 					if(a==camps.length-1)
 					{//Si es l'ultim no cal cap coma
-						escriuJSON.println("	"+'"'+camps[a][0]+'"'+":"+'"'+dadesAleatories[a][i]==null?dadesAleatories[a][i]:"null"+'"');
+						escriuJSON.println("	"+'"'+camps[a][0]+'"'+":"+'"'+dadesAleatories[a][i]==null?"null":dadesAleatories[a][i]+'"');
 					}else {
-						escriuJSON.println("	"+'"'+camps[a][0]+'"'+":"+'"'+dadesAleatories[a][i]==null?dadesAleatories[a][i]:"null"+'"'+",");
+						escriuJSON.println("	"+'"'+camps[a][0]+'"'+":"+'"'+dadesAleatories[a][i]==null?"null":dadesAleatories[a][i]+'"'+",");
 					}
 				}
 				if(i==dadesAleatories[0].length-1)escriuJSON.println("	}");
@@ -1040,7 +1040,7 @@ public class Sambinha{
 							correcte = false;
 						}
 						if (camps.length == 3) {
-							if (camps[2].charAt(0) != 'B') {
+							if (camps[2].charAt(0) != 'B' || camps[2].length() > 4) {
 								System.out.println(errors[4]+linies[0]);
 								correcte = false;
 							}
