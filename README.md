@@ -1,1 +1,3 @@
 # Projecte1
+En aquest projecte el nostre objectiu final és tindre un programa de consola que generi dades de demostració que es puguin extreure en format script SQL o XML, a part d'aquests dos formats hem afegit algun més com són el JSON i el CSV. Com a punt a destacar, les dades seran en català en la mida del possible (ja que alguns caràcters de la llengua catalana no hem pogut afegir-lo). El programa en iniciar-se ja li demanarà la ruta d'un arxiu de text on tindrà escrit tots els camps que vol, i depenent del camp pondrà certes restriccions, definir com els vol. Per exemple, podrà ficar que hi hagi un camp autonumèric, i aquest podem especificar que comenci per 10 i no per 0.
+Aleshores el programa generarà les dades emmagatzemant en el fitxer de sortida que demanem.
